@@ -308,6 +308,10 @@ def _web(port: int) -> None:
     async def api_fired():
         return _fired_log
 
+    @app.get("/settings")
+    async def api_settings():
+        return _load_store()
+
     @app.get("/health")
     async def health():
         return {"ok": True}
