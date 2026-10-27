@@ -144,6 +144,23 @@ _APP_CSS = """<style>
     gap: var(--cds-sp-04);
   }
 
+  /* Markdown tables in agent answers */
+  .msg.agent table, .summary-card .card-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: var(--cds-sp-03) 0;
+  }
+  .msg.agent th, .msg.agent td,
+  .summary-card .card-body th, .summary-card .card-body td {
+    border: 1px solid var(--cds-border-subtle);
+    padding: var(--cds-sp-03) var(--cds-sp-04);
+    text-align: left;
+  }
+  .msg.agent th, .summary-card .card-body th {
+    background: var(--cds-layer-accent);
+    font-weight: 600;
+  }
+
   /* Input row */
   .input-row {
     display: flex;
@@ -482,6 +499,18 @@ _BODY = r"""
       .replace(/```[\s\S]*?```/g, m =>
         '<pre style="white-space:pre-wrap;background:var(--cds-layer-accent);padding:8px;overflow:auto">'
         + m.replace(/```/g, '') + '</pre>')
+      .replace(/((?:^[ \t]*\|.+\|[ \t]*\n?)+)/gm, block => {
+        const rows = block.trim().split('\n')
+          .map(r => r.trim())
+          .filter(r => r && !/^\|[-| :]+\|$/.test(r));
+        if (!rows.length) return block;
+        const cells = (row, tag) => row.split('|').slice(1, -1)
+          .map(c => '<' + tag + '>' + c.trim() + '</' + tag + '>').join('');
+        const body = rows.slice(1)
+          .map(r => '<tr>' + cells(r, 'td') + '</tr>').join('');
+        return '<table><thead><tr>' + cells(rows[0], 'th') + '</tr></thead>'
+          + (body ? '<tbody>' + body + '</tbody>' : '') + '</table>';
+      })
       .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,
         '<a href="$2" target="_blank" rel="noopener">$1</a>')
       .replace(/^\s*#{1,6}\s+(.+)$/gm, '<strong>$1</strong>')
